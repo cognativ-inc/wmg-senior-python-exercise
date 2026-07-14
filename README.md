@@ -53,15 +53,15 @@ def latest_event_by_camera(events: list[CameraEvent] | None) -> dict[str, Camera
 
 Rules:
 
-1. Ignore duplicate `event_id`.
-2. Group events by `camera_id`.
-3. For each camera, return the latest event by `timestamp_millis`.
-4. If two valid events for the same camera have the same timestamp, keep the one
+1. If the input list is `None`, return an empty dict.
+2. Ignore `None` events.
+3. Ignore events where `event_id` is `None`.
+4. Ignore events where `camera_id` is `None`.
+5. Ignore duplicate `event_id`.
+6. Group events by `camera_id`.
+7. For each camera, return the latest event by `timestamp_millis`.
+8. If two valid events for the same camera have the same timestamp, keep the one
    that appeared **last** in the input list.
-5. Ignore `None` events.
-6. Ignore events where `event_id` is `None`.
-7. Ignore events where `camera_id` is `None`.
-8. If the input list is `None`, return an empty dict.
 
 **Important:** if the same `event_id` appears more than once, only the **first**
 occurrence counts — even if the duplicate has a newer timestamp, it must be
@@ -162,17 +162,16 @@ child_count > 0 and adult_count == 0
 
 Rules:
 
-1. Events may arrive out of order.
-2. Sort events by `timestamp_millis`.
-3. If multiple events share the same timestamp, keep the **last** one from the
+1. If the input is `None` or empty, return `False`.
+2. If `window_millis <= 0`, return `False`.
+3. Ignore `None` events.
+4. Events may arrive out of order — sort them by `timestamp_millis`.
+5. If multiple events share the same timestamp, keep the **last** one from the
    original input order.
-4. The alert opens only if the child-alone state lasts continuously for at least
+6. The alert opens only if the child-alone state lasts continuously for at least
    `window_millis`.
-5. Any event with `adult_count > 0` breaks the current window.
-6. Any event with `child_count == 0` breaks the current window.
-7. Ignore `None` events.
-8. If the input is `None` or empty, return `False`.
-9. If `window_millis <= 0`, return `False`.
+7. Any event with `adult_count > 0` breaks the current window.
+8. Any event with `child_count == 0` breaks the current window.
 
 ### Example 1 — opens
 
@@ -218,12 +217,12 @@ def should_open_child_alone_alert(
 
 Added rules (apply only when `late_tolerance_millis` is provided):
 
-1. Normalize duplicate timestamps as before.
-2. Sort events as before.
-3. Track the gap between consecutive normalized events.
-4. If the gap is greater than `late_tolerance_millis`, reset the current
+1. If `late_tolerance_millis < 0`, return `False`.
+2. Normalize duplicate timestamps as before.
+3. Sort events as before.
+4. Track the gap between consecutive normalized events.
+5. If the gap is greater than `late_tolerance_millis`, reset the current
    child-alone window.
-5. If `late_tolerance_millis < 0`, return `False`.
 
 ---
 
