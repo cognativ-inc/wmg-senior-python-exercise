@@ -23,4 +23,44 @@ def should_open_child_alone_alert(
     tolerance rule does not apply. See README.md for the exact rules.
     """
     # TODO: implement (Exercise 3 + follow-up)
-    raise NotImplementedError("Not implemented yet (Exercise 3)")
+    # Rule 1
+    if not events:
+        return False
+    if window_millis <= 0:
+        return False
+    if (
+        late_tolerance_millis is not None
+        and late_tolerance_millis < 0
+    ):
+        return False
+    valid_events = [event for event in events if event is not None]
+    if not valid_events:
+        return False
+    by_timestamp: dict[int, DetectionEvent] = {}
+    for event in valid_events:
+        by_timestamp[event.timestamp_millis] = event
+    normalized_events = sorted(
+        by_timestamp.values(),
+        key=lambda event: event.timestamp_millis,
+    )
+
+    start_time: int | None = None
+    previous_timestamp: int | None = None
+
+    for event in normalized_events:
+        if (
+            previous_timestamp is not None
+            and late_tolerance_millis is not None
+            and event.timestamp_millis - previous_timestamp > late_tolerance_millis
+        ):
+            start_time = None
+        previous_timestamp = event.timestamp_millis
+        if event.adult_count > 0 or event.child_count == 0:
+            start_time = None
+            continue
+        if start_time is None:
+            start_time = event.timestamp_millis
+        # Window reached?
+        if event.timestamp_millis - start_time >= window_millis:
+            return True
+    return False

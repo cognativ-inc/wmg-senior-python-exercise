@@ -27,6 +27,7 @@ def test_ex1_groups_by_camera_and_keeps_latest_ignoring_later_duplicate():
     assert result["cam-2"].event_id == "e3"
 
 
+
 def test_ex1_null_input_returns_empty_map():
     assert latest_event_by_camera(None) == {}
 

@@ -10,7 +10,7 @@ exercises built around a stream of camera detection events.
 
   ```bash
   python -m pip install -r requirements.txt   # just pytest
-  pytest
+  python -m pytest .\tests\
   ```
 
 All tests currently **fail** because the functions are not implemented yet —
