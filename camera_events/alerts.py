@@ -1,4 +1,4 @@
-"""Exercise 3 — see README.md for the full prompt."""
+"""Exercise 5 — see README.md for the full prompt."""
 
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ def should_open_child_alone_alert(
     window_millis: int,
     late_tolerance_millis: int | None = None,
 ) -> bool:
-    """Exercise 3 (plus the follow-up).
+    """Exercise 5 (plus the follow-up).
 
     Return ``True`` when the child-alone condition
     (``child_count > 0 and adult_count == 0``) holds continuously for at least
@@ -22,5 +22,5 @@ def should_open_child_alone_alert(
     tolerance resets the current child-alone window. When it is ``None`` the
     tolerance rule does not apply. See README.md for the exact rules.
     """
-    # TODO: implement (Exercise 3 + follow-up)
-    raise NotImplementedError("Not implemented yet (Exercise 3)")
+    # TODO: implement (Exercise 5 + follow-up)
+    raise NotImplementedError("Not implemented yet (Exercise 5)")

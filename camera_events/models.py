@@ -2,7 +2,7 @@
 
 ``CameraEvent`` and ``DetectionEvent`` are provided for you — do not change
 them. ``CameraAggregationResult`` is a starting point you may refine (see
-Exercise 2).
+Exercise 4).
 """
 
 from __future__ import annotations
@@ -38,9 +38,9 @@ class DetectionEvent:
 
 @dataclass(frozen=True)
 class CameraAggregationResult:
-    """Result type for Exercise 2.
+    """Result type for Exercise 4.
 
-    Designing a clean return type is part of Exercise 2. This skeleton is
+    Designing a clean return type is part of Exercise 4. This skeleton is
     provided so the project imports and the tests run; you are encouraged to
     refine it (immutability, defensive copies, naming) and to explain your
     choices to the interviewer.

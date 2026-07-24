@@ -1,4 +1,4 @@
-"""Tests for Exercises 1 and 2 — see README.md."""
+"""Tests for Exercises 3 and 4 — see README.md."""
 
 from camera_events import (
     CameraEvent,
@@ -8,11 +8,11 @@ from camera_events import (
 
 
 # ---------------------------------------------------------------------
-# Exercise 1 — latest_event_by_camera
+# Exercise 3 — latest_event_by_camera
 # ---------------------------------------------------------------------
 
 
-def test_ex1_groups_by_camera_and_keeps_latest_ignoring_later_duplicate():
+def test_ex3_groups_by_camera_and_keeps_latest_ignoring_later_duplicate():
     events = [
         CameraEvent("e1", "cam-1", 1000, 0, 0),
         CameraEvent("e2", "cam-1", 2000, 0, 0),
@@ -27,11 +27,11 @@ def test_ex1_groups_by_camera_and_keeps_latest_ignoring_later_duplicate():
     assert result["cam-2"].event_id == "e3"
 
 
-def test_ex1_null_input_returns_empty_map():
+def test_ex3_null_input_returns_empty_map():
     assert latest_event_by_camera(None) == {}
 
 
-def test_ex1_duplicate_event_id_ignored_even_when_newer():
+def test_ex3_duplicate_event_id_ignored_even_when_newer():
     events = [
         CameraEvent("e1", "cam-1", 1000, 0, 0),
         CameraEvent("e1", "cam-1", 9999, 0, 0),
@@ -42,7 +42,7 @@ def test_ex1_duplicate_event_id_ignored_even_when_newer():
     assert result["cam-1"].timestamp_millis == 1000
 
 
-def test_ex1_ignores_null_and_invalid_events():
+def test_ex3_ignores_null_and_invalid_events():
     events = [
         None,
         CameraEvent(None, "cam-1", 1000, 0, 0),
@@ -56,7 +56,7 @@ def test_ex1_ignores_null_and_invalid_events():
     assert result["cam-1"].event_id == "e2"
 
 
-def test_ex1_same_timestamp_keeps_last_in_input_order():
+def test_ex3_same_timestamp_keeps_last_in_input_order():
     events = [
         CameraEvent("e1", "cam-1", 2000, 0, 0),
         CameraEvent("e2", "cam-1", 2000, 0, 0),
@@ -67,16 +67,16 @@ def test_ex1_same_timestamp_keeps_last_in_input_order():
     assert result["cam-1"].event_id == "e2"
 
 
-def test_ex1_empty_list_returns_empty_map():
+def test_ex3_empty_list_returns_empty_map():
     assert latest_event_by_camera([]) == {}
 
 
 # ---------------------------------------------------------------------
-# Exercise 2 — aggregate_latest_event_by_camera
+# Exercise 4 — aggregate_latest_event_by_camera
 # ---------------------------------------------------------------------
 
 
-def test_ex2_counts_ignored_duplicates():
+def test_ex4_counts_ignored_duplicates():
     events = [
         CameraEvent("e1", "cam-1", 1000, 0, 0),
         CameraEvent("e2", "cam-1", 2000, 0, 0),
@@ -91,7 +91,7 @@ def test_ex2_counts_ignored_duplicates():
     assert result.latest_by_camera["cam-1"].timestamp_millis == 2000
 
 
-def test_ex2_invalid_events_do_not_count_as_duplicates():
+def test_ex4_invalid_events_do_not_count_as_duplicates():
     events = [
         None,
         CameraEvent(None, "cam-1", 1000, 0, 0),
@@ -104,7 +104,7 @@ def test_ex2_invalid_events_do_not_count_as_duplicates():
     assert result.ignored_duplicate_count == 0
 
 
-def test_ex2_null_input_returns_empty_result_with_zero_count():
+def test_ex4_null_input_returns_empty_result_with_zero_count():
     result = aggregate_latest_event_by_camera(None)
 
     assert result.latest_by_camera == {}

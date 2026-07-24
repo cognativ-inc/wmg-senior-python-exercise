@@ -17,23 +17,10 @@ All tests currently **fail** because the functions are not implemented yet —
 that is expected. Your job is to make them pass. You are welcome to add your own
 tests as well.
 
-## Where to work
+## The data model — read this first
 
-| Exercise | File |
-| --- | --- |
-| 1 & 2 | `camera_events/aggregator.py` |
-| 3 | `camera_events/alerts.py` |
-
-The data classes (`CameraEvent`, `DetectionEvent`) in `camera_events/models.py`
-are provided — don't change them. `CameraAggregationResult` is a starting point
-you may refine (see Exercise 2).
-
----
-
-## Exercise 1 — Deduplicate and aggregate camera events
-
-You receive camera detection events from a queue. Some messages may be
-duplicated.
+Every function receives a **`list` of objects**, never a list of strings. The
+objects are the `@dataclass` instances defined in `camera_events/models.py`:
 
 ```python
 @dataclass(frozen=True)
@@ -43,7 +30,126 @@ class CameraEvent:
     timestamp_millis: int
     adult_count: int
     child_count: int
+
+
+@dataclass(frozen=True)
+class DetectionEvent:
+    timestamp_millis: int
+    adult_count: int
+    child_count: int
 ```
+
+So an input list is built like this — real `CameraEvent` objects, not text:
+
+```python
+events = [
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=1000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=1, child_count=0),
+]
+```
+
+Every "Input" block in the examples below is constructing objects exactly like
+this. When you access a field, you use attribute access (`event.camera_id`),
+**not** string parsing.
+
+The data classes (`CameraEvent`, `DetectionEvent`) are provided — don't change
+them. `CameraAggregationResult` is a starting point you may refine (see
+Exercise 4).
+
+## Where to work
+
+| Exercise | File |
+| --- | --- |
+| 1 & 2 (warm-ups) | `camera_events/basics.py` |
+| 3 & 4 | `camera_events/aggregator.py` |
+| 5 | `camera_events/alerts.py` |
+
+Work through them in order — 1 and 2 are quick warm-ups to get you used to the
+data model; 3, 4 and 5 are the main exercises.
+
+---
+
+## Exercise 1 — Count events per camera (warm-up)
+
+A gentle warm-up. You receive a list of `CameraEvent` objects. Count how many
+events each camera produced.
+
+Implement:
+
+```python
+def count_events_per_camera(events: list[CameraEvent] | None) -> dict[str, int]
+```
+
+Rules:
+
+1. If the input list is `None`, return an empty dict.
+2. Ignore `None` events.
+3. Ignore events where `camera_id` is `None`.
+4. Return a mapping from `camera_id` to the number of events for that camera.
+
+### Example
+
+Input:
+
+```python
+events = [
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=1000, adult_count=1, child_count=0),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e3", camera_id="cam-2", timestamp_millis=1500, adult_count=0, child_count=0),
+]
+```
+
+Expected result:
+
+```python
+{"cam-1": 2, "cam-2": 1}
+```
+
+---
+
+## Exercise 2 — Total people per camera (warm-up)
+
+Still a warm-up. For each camera, add up the number of people it saw across all
+of its events, where a single event's people count is `adult_count + child_count`.
+
+Implement:
+
+```python
+def total_people_per_camera(events: list[CameraEvent] | None) -> dict[str, int]
+```
+
+Rules:
+
+1. If the input list is `None`, return an empty dict.
+2. Ignore `None` events.
+3. Ignore events where `camera_id` is `None`.
+4. Return a mapping from `camera_id` to the summed `adult_count + child_count`
+   across that camera's events.
+
+### Example
+
+Input:
+
+```python
+events = [
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=1000, adult_count=2, child_count=1),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=3),
+    CameraEvent(event_id="e3", camera_id="cam-2", timestamp_millis=1500, adult_count=1, child_count=0),
+]
+```
+
+Expected result:
+
+```python
+{"cam-1": 6, "cam-2": 1}   # cam-1: (2+1) + (0+3) = 6,  cam-2: 1+0 = 1
+```
+
+---
+
+## Exercise 3 — Deduplicate and aggregate camera events
+
+You receive camera detection events from a queue. Some messages may be
+duplicated.
 
 Implement:
 
@@ -71,25 +177,29 @@ ignored.
 
 Input:
 
-```text
-event_id="e1", camera_id="cam-1", timestamp_millis=1000
-event_id="e2", camera_id="cam-1", timestamp_millis=2000
-event_id="e3", camera_id="cam-2", timestamp_millis=1500
-event_id="e1", camera_id="cam-1", timestamp_millis=3000
+```python
+events = [
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=1000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e3", camera_id="cam-2", timestamp_millis=1500, adult_count=0, child_count=0),
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=3000, adult_count=0, child_count=0),
+]
 ```
 
-Expected result:
+Expected result (a dict of `camera_id` -> `CameraEvent` object):
 
-```text
-cam-1 -> e2
-cam-2 -> e3
+```python
+{
+    "cam-1": CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=0),
+    "cam-2": CameraEvent(event_id="e3", camera_id="cam-2", timestamp_millis=1500, adult_count=0, child_count=0),
+}
 ```
 
 The last `e1` is ignored because `event_id="e1"` was already seen.
 
 ---
 
-## Exercise 2 — Return aggregation metadata
+## Exercise 4 — Return aggregation metadata
 
 Evolve the previous solution. The function must still return the latest event by
 camera, but it must **also** report how many duplicate events were ignored.
@@ -115,18 +225,24 @@ ignored_duplicate_count: int
 
 Input:
 
-```text
-event_id="e1", camera_id="cam-1", timestamp_millis=1000
-event_id="e2", camera_id="cam-1", timestamp_millis=2000
-event_id="e1", camera_id="cam-1", timestamp_millis=3000
-event_id="e2", camera_id="cam-1", timestamp_millis=4000
+```python
+events = [
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=1000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e1", camera_id="cam-1", timestamp_millis=3000, adult_count=0, child_count=0),
+    CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=4000, adult_count=0, child_count=0),
+]
 ```
 
-Expected:
+Expected result:
 
-```text
-latest_by_camera:        cam-1 -> e2 at timestamp 2000
-ignored_duplicate_count: 2
+```python
+CameraAggregationResult(
+    latest_by_camera={
+        "cam-1": CameraEvent(event_id="e2", camera_id="cam-1", timestamp_millis=2000, adult_count=0, child_count=0),
+    },
+    ignored_duplicate_count=2,
+)
 ```
 
 The second `e1` and the second `e2` are ignored. Note: only ignored **duplicate
@@ -134,18 +250,10 @@ event IDs** count — `None`/invalid events do not.
 
 ---
 
-## Exercise 3 — Detect child-alone alert windows
+## Exercise 5 — Detect child-alone alert windows
 
-You receive detection events for **one** camera. Events may arrive ordered or
-unordered.
-
-```python
-@dataclass(frozen=True)
-class DetectionEvent:
-    timestamp_millis: int
-    adult_count: int
-    child_count: int
-```
+You receive detection events for **one** camera as a list of `DetectionEvent`
+objects. Events may arrive ordered or unordered.
 
 Implement:
 
@@ -175,31 +283,37 @@ Rules:
 
 ### Example 1 — opens
 
-```text
-timestamp_millis=1000, adult_count=0, child_count=1
-timestamp_millis=2000, adult_count=0, child_count=1
-timestamp_millis=3000, adult_count=0, child_count=1
-window_millis = 2000   ->   True   (3000 - 1000 = 2000)
+```python
+events = [
+    DetectionEvent(timestamp_millis=1000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=2000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=3000, adult_count=0, child_count=1),
+]
+should_open_child_alone_alert(events, window_millis=2000)   # -> True  (3000 - 1000 = 2000)
 ```
 
 ### Example 2 — adult breaks the window
 
-```text
-timestamp_millis=1000, adult_count=0, child_count=1
-timestamp_millis=2000, adult_count=1, child_count=1
-timestamp_millis=3000, adult_count=0, child_count=1
-timestamp_millis=4000, adult_count=0, child_count=1
-window_millis = 2000   ->   False
+```python
+events = [
+    DetectionEvent(timestamp_millis=1000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=2000, adult_count=1, child_count=1),
+    DetectionEvent(timestamp_millis=3000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=4000, adult_count=0, child_count=1),
+]
+should_open_child_alone_alert(events, window_millis=2000)   # -> False
 ```
 
 ### Example 3 — duplicate timestamp keeps last input event
 
-```text
-timestamp_millis=1000, adult_count=0, child_count=1
-timestamp_millis=2000, adult_count=0, child_count=1
-timestamp_millis=2000, adult_count=1, child_count=1
-timestamp_millis=3000, adult_count=0, child_count=1
-window_millis = 2000   ->   False   (last event at 2000 has an adult)
+```python
+events = [
+    DetectionEvent(timestamp_millis=1000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=2000, adult_count=0, child_count=1),
+    DetectionEvent(timestamp_millis=2000, adult_count=1, child_count=1),
+    DetectionEvent(timestamp_millis=3000, adult_count=0, child_count=1),
+]
+should_open_child_alone_alert(events, window_millis=2000)   # -> False  (last event at 2000 has an adult)
 ```
 
 ### Follow-up — `late_tolerance_millis`
